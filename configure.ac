@@ -1,10 +1,14 @@
 dnl Process this file with autoconf to create configure
 AC_PREREQ(2.68)
 
+<<<<<<< HEAD:configure.ac
 AC_INIT([RTAI], [magma-unofficial], [rtai@rtai.org])
+=======
+AC_INIT(rtai,4.0,rtai@rtai.org)
+>>>>>>> vulcano:configure.in
 
-CONFIG_RTAI_VERSION_MAJOR=3
-CONFIG_RTAI_VERSION_MINOR=7
+CONFIG_RTAI_VERSION_MAJOR=4
+CONFIG_RTAI_VERSION_MINOR=0
 CONFIG_RTAI_REVISION_LEVEL=0
 
 AC_CONFIG_HEADERS(rtai_config.h)
@@ -431,27 +435,8 @@ AC_ARG_ENABLE(math,
 	esac])
 AC_MSG_RESULT(${CONFIG_RTAI_MATH:-no})
 
-RTAI_MATH_LIBM=
-
 if test x$CONFIG_RTAI_MATH = xy ; then
   RTAI_BUILTIN_MODLIST="$RTAI_BUILTIN_MODLIST math"
-fi
-
-if test x$CONFIG_RTAI_MATH != x ; then
-  AC_MSG_CHECKING(for libm dir/file for math support)
-  AC_ARG_WITH(math-libm-dir,
-	      [ --with-math-libm-dir	libm dir/file for math support])
-  if test x"$CONFIG_RTAI_MATH_LIBM_DIR" = x ; then
-    dnl "safe" default?
-    RTAI_MATH_LIBM="/usr/lib/libm.a"
-  elif test -f "$CONFIG_RTAI_MATH_LIBM_DIR" ; then
-    RTAI_MATH_LIBM="$CONFIG_RTAI_MATH_LIBM_DIR"
-  elif test -d "$CONFIG_RTAI_MATH_LIBM_DIR" ; then
-    RTAI_MATH_LIBM="$CONFIG_RTAI_MATH_LIBM_DIR/libm.a"
-  else
-    AC_MSG_ERROR([Bad argument $withvar to --with-math-libm-dir])
-  fi
-  AC_MSG_RESULT([libm: $RTAI_MATH_LIBM])
 fi
 
 AC_MSG_CHECKING(for bits IPC support)
@@ -1560,9 +1545,6 @@ case $CONFIG_RTAI_ONE_SHOT in
 esac
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_ONE_SHOT,$CONFIG_RTAI_ONE_SHOT,[Kconfig])
 
-AC_DEFINE_UNQUOTED(CONFIG_RTAI_MATH_LIBM_TO_USE,$CONFIG_RTAI_MATH_LIBM_TO_USE,[Kconfig])
-test x$CONFIG_RTAI_MATH_KCOMPLEX = xy && AC_DEFINE(CONFIG_RTAI_MATH_KCOMPLEX,1,[Kconfig])
-
 case $CONFIG_RTAI_BUSY_TIME_ALIGN in
 	y) CONFIG_RTAI_BUSY_TIME_ALIGN=1 ;;
 	n|*) CONFIG_RTAI_BUSY_TIME_ALIGN=0 ;;
@@ -2025,7 +2007,6 @@ AC_SUBST(RTAI_LXRT_LDADD)
 AC_SUBST(RTAI_FP_CFLAGS)
 AC_SUBST(RTAI_LINUX_DIR)
 AC_SUBST(RTAI_LINUX_VERSION)
-AC_SUBST(RTAI_MATH_LIBM)
 AC_SUBST(RTAI_MODULE_DIR)
 AC_SUBST(RTAI_MODULE_EXT)
 AC_SUBST(RTAI_KBUILD_ENV)
@@ -2052,16 +2033,6 @@ AC_CONFIG_FILES([ \
 	base/scripts/GNUmakefile \
 	base/scripts/rtai-config \
 	base/scripts/rtai-load \
-        base/arch/i386/GNUmakefile \
-	base/arch/i386/hal/GNUmakefile \
-	base/arch/i386/calibration/GNUmakefile \
-	base/arch/i386/calibration/setsmi \
-	base/include/asm-i386/GNUmakefile \
-	base/arch/x86_64/GNUmakefile \
-        base/arch/x86_64/hal/GNUmakefile \
-        base/arch/x86_64/calibration/GNUmakefile \
-	base/arch/x86_64/calibration/setsmi \
-        base/include/asm-x86_64/GNUmakefile \
 	base/arch/x86/GNUmakefile \
         base/arch/x86/hal/GNUmakefile \
         base/arch/x86/calibration/GNUmakefile \
