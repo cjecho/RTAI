@@ -9,7 +9,6 @@ config RTAI_INSTALLDIR
 	help
 	This option defines the directory where the various RTAI
 	files will be installed on your target system.
-
 	This directory may be changed if you double-click in the area
 	named "Value". The default installation directory is
 	/usr/realtime.
@@ -19,7 +18,7 @@ config RTAI_LINUXDIR
 	default "/usr/src/linux"
 	help
 	This variable contains the directory of your previously
-	patched Linux kernel. As explained before, you can changed the
+	patched Linux kernel. As explained before, you can change the
 	value of the Linux source tree which is fixed by default to
 	/usr/src/linux.
 
@@ -67,14 +66,15 @@ config RTAI_USER_DEBUG
 	depends on RTAI_EXTENDED
 	default n
 	help
-	This options adds the -g flag when compiling user-space programs.
-	User space RTAI syscall by simple inlining is implicitely disabled.
+	This options adds the -g flag when compiling user-space programs. 
+	User space RTAI syscall by simple inlining is implicitly disabled.
 
 config RTAI_MAINTAINER
 	bool "Enable maintainer mode"
 	depends on RTAI_EXTENDED
 	default n
 	help
+
 	This option will activate the '--enable-maintainer-mode'
 	option in the configure scripts. For more information, refer
 	to the autoconf documentation:
@@ -84,6 +84,18 @@ config RTAI_MAINTAINER_AUTOTOOLS
 	bool "Enable Autoconf/Automake maintainer mode"
 	depends on RTAI_MAINTAINER
 	default n
+
+choice
+	optional
+	prompt "Private maintainer profiles"
+	depends on RTAI_MAINTAINER
+endchoice
+
+config RTAI_MAINTAINER_NONE
+	bool "Use standard settings"
+
+config RTAI_MAINTAINER_PMA
+	bool "Use settings from mantegazza()aero!polimi!it"
 
 config RTAI_QUIET
 	bool "Quiet build"

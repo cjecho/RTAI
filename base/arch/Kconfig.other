@@ -4,14 +4,14 @@
 
 config RTAI_USE_NEWERR
 	bool "New return values of blocking RTAI APIs"
-	default n
+	default y
 	help
-	Return values for RTAI blocking APIs are a bit sketchy. That
+	Return values for RTAI blocking APIs are a bit sketchy. That 
 	is due to a long standing legacy dating back to DOS and 8 bits PCs,
-	when saving a few "if"s might have been important. Whatever one's
-	opinion such a legacy has now been likely inheredited by many well
-	working existing RTAI applications, that might break with a new
-	error return scheme. In any case a better set of error return values
+	when saving a few "if"s might have been important. Whatever one's 
+	opinion such a legacy has now been likely inherited by many well
+	working existing RTAI applications, that might break with a new 
+	error return scheme. In any case a better set of error return values 
 	might be useful nowadays, so it has been added. With it one will be
 	able to correctly infer more detailed reasons for error returns i.e.:
 	- invalid requests (RTE_OBJINV),
@@ -20,7 +20,7 @@ config RTAI_USE_NEWERR
 	- timer overruns (RTE_TMROVRN),
 	- deletion of blocking objects (RTE_OBJREM).
 	Thus the new scheme has been made configurable to allow RTAI users
-	to choose what to do, without forcing any adaption for already
+	to choose what to do, without forcing any adaption for already 
 	existing working applications.
 
 config RTAI_MATH
@@ -28,37 +28,23 @@ config RTAI_MATH
 	depends on RTAI_FPU_SUPPORT
 	default n
 	help
-	This parameter allows building a module containing math support
+	This parameter allows building a module containing math support 
 	functions for kernel space. It might be useful to avoid fighting
 	for the use of libc within the kernel.
 
-config RTAI_MATH_LIBM_TO_USE
-	string "1 - NEWLIB (default), 2 - UCLIB, 3 - GLIBC"
-	depends on RTAI_MATH
-	default 1
-	help
-	Your libm.a of choice.
-
-config RTAI_MATH_LIBM_DIR
-	depends on RTAI_MATH
-	string "The installation directory of your chosen libm.a"
-	default "/usr/lib"
-
-config RTAI_MATH_KCOMPLEX
-	bool "Include complex support"
+config RTAI_MATH_C99
+	bool "C99 standard support"
 	depends on RTAI_MATH
 	default n
-	help
-	This parameter allows the inclusion of complex support functions, ignored for uClibc.
 
 config RTAI_MALLOC
 	tristate "Real-time malloc support"
 	default y
 	help
-	RTAI provides a real-time implementation of malloc(). This allows
+	RTAI provides a real-time implementation of malloc(). This allows 
 	real-time tasks to allocate and free memory safely while executing
 	in the real-time domain. If it is not enabled kernel's kmalloc will
-	be used. So disabling this option is acceptable if you'll care
+	be used. So disabling this option is acceptable if you'll care 
 	to do any allocation while in Linux context only, i.e. at modules
 	initialisation.
 	The module will be called rtai_malloc.o.
@@ -69,10 +55,10 @@ config RTAI_USE_TLSF
 	default n
 	help
 	RTAI dynamic memory allocation support offers two different methods
-	to allocate memory chunks. The default one is along the lines
+	to allocate memory chunks. The default one is along the lines 
 	illustrated in:
 	"Design of a General Purpose Memory Allocator for the 4.3BSD Unix
-	 Kernel" by Marshall K. McKusick.
+	 Kernel" by Marshall K. McKusick. 
 	By enabling this option the:
 	"Two Levels Segregated Lists (TLSF)" as found at:
 	http://rtportal.upv.es/rtmalloc/allocators/tlsf/
@@ -88,16 +74,25 @@ config RTAI_MALLOC_VMALLOC
 	depends on RTAI_MALLOC
 	default y
 	help
-	RTAI's malloc support offers two different ways to allocate memory
+	RTAI's malloc support offers two different ways to allocate memory 
 	chunks, i.e. kmalloc and vmalloc.
 	The reasons for using vmalloc:
 	- it is simpler to share allocated buffers with user space;
 	- it doesn't have the size restrictions of kmalloc.
 	The reasons for using kmalloc:
 	- it is faster (not important since it as to be used in soft real time);
-	- it exhibits contiguous buffer addressing needed for DMA controllers
+	- it exhibits contiguous buffer addressing needed for DMA controllers 
 	  which don't have scattering/gathering capability.
 	The default is using kmalloc()
+
+config RTAI_MALLOC_HEAPSZ
+	string "Size of the global heap (Kbytes)"
+	depends on RTAI_MALLOC
+	default 2048
+	help
+	RTAI pre-allocates a global heap as part of its initialization
+	chores. This parameter allows to define its size (in
+	kilobytes).
 
 config RTAI_KSTACK_HEAPSZ
 	string "Size of stacks heap for RTAI own kernel tasks (Kbytes)"
@@ -116,7 +111,7 @@ config RTAI_TASK_SWITCH_SIGNAL
 	- kernel: execute a function assigned at rt_task_init or by calling
 	  rt_task_signal_handler;
 	- user: install an RTAI own signal handler and have it called at any
-	  task switch through its number, assigned by calling
+	  task switch through its number, assigned by calling 
 	  rt_task_signal_handler.
 	The default is to not make available this feature, so you must enable
 	it explicitly if it is useful for your application.
@@ -125,14 +120,15 @@ config RTAI_USI
 	bool "User-space interrupts"
 	default n
 	help
-	RTAI examples are available to show managing interrupts in user
+	RTAI examples are available to show managing interrupts in user 
 	space, e.g: resumefromintr in "showroom" CVS (kernel/user/netrpc),
 	"pressa" in "showroom" (user); but all of them require installing
 	a proper handler in kernel space, to wake up a hard real-time user
 	space task.
-	The user space interrupt support does much of the same, but adds
+	The user space interrupt support does much of the same, but adds 
 	something that permits you to write nothing in kernel space.
 	The module will be called rtai_usi.o.
+	
 
 config RTAI_WD
 	bool "Watchdog support"
@@ -151,14 +147,28 @@ config RTAI_WD
 	run it, but in most cases should be minimal.
 	The following watchdog policies are possible:
 	- do nothing other than log some messages and keep a record of
-	  the bad task;
+	  the bad task; 
 	- resynchronise the task's frame time and nothing more;
 	- debug policy which is a special case of the above
-	  resynchronisation policy;
+	  resynchronisation policy; 
 	- stretch the period of the offending task until it no longer
-	  overruns;
+	  overruns; 
 	- slip the offending task by forcibly suspending it for a
-	  percentage of its period;
+	  percentage of its period; 
 	- suspend the offending task so that it no longer threaten the system;
 	- kill the offending task and remove all traces.
 	The module will be called rtai_wd.o.
+
+config RTAI_HARD_SOFT_TOGGLER
+	bool "Install Linux signal handler to toggle hard-soft modes"
+	default n
+	help
+	By setting this option RTAI will install a Linux signal (SIGUSR1) and 
+	handler, when any of the available task-thread init functions is called
+	to enable the usage of its own APIs. With it is possible to toggle the 
+	hard-soft mode of any task, asynchronously and outside of it, by using 
+	some form of KILL, i.e.: "kill -USR1 <pid>" from a shell, or 
+	"kill(pid, SIGUSR1)" from a C function. For the latter case the helper 
+	function "pid_t rt_get_linux_tid(RT_TASK *rt_task)" has been added to
+	help in quickly getting the pid of the RTAI task extension "rt_task" 
+	of a Linux task.

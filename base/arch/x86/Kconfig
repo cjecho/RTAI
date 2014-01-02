@@ -7,19 +7,6 @@ menu "General"
 source "base/arch/Kconfig.general"
 
 choice
-	optional
-	prompt "Private maintainer profiles"
-	depends on RTAI_MAINTAINER
-
-config RTAI_MAINTAINER_NONE
-	bool "Use standard settings"
-
-config RTAI_MAINTAINER_PMA
-	bool "Use settings from mantegazza()aero!polimi!it"
-
-endchoice
-
-choice
 	prompt "Inlining mode of user-space services"
 	help
 	Allows choosing among:
@@ -41,19 +28,7 @@ endchoice
 
 endmenu
 
-menu "Machine (x86 / x86_64)"
-
-config RTAI_DONT_DISPATCH_CORE_IRQS
-	bool "Direct vectoring of RTAI native interrupts"
-	default y
-	help
-
-	RTAI dispatches real time interrupts immediately to achieve as
-	low a overhead as possible. Very important on low end CPUs. By
-	setting this option it is possible to achieve a further improvement
-	by allowing hard RTAI internal timers and SMP interprocessor 
-	scheduling interrupts to be vectored directly to their handlers, 
-	i.e without any dispatching overhead. A must on low end CPUs.
+menu "Machine (x86)"
 
 config RTAI_FPU_SUPPORT
 	bool "Enable FPU support"
@@ -109,105 +84,18 @@ menu "Scheduling options"
 
 source "base/arch/Kconfig.sched"
 
-config RTAI_SCHED_8254_LATENCY
-	string "8254 tuning latency (ns)"
-	default 4700
-	help
-	The anticipation time to be used to program the hard timer, in oneshot
-	mode, for the next scheduling shot in order to compensate for the
-	programming overhead needed to determine the right firing time.
-	This parameter has no effect when the periodic mode is used.
-	It should be determined with the calibration support provided by RTAI, 
-	starting from a tentative configuration; better if set to zero
-	for the very first calibration. 
-	The same value is used as a compromise for both kernel and 
-	user space tasks. Which means that for an on time user space task there 
-	could be some anticipation, i.e. a negative latency, for a kernel space
-	task. The busy alignment option should be used in such a case to
-	provide a compromised on time scheduling for both, albeit at a 
-	negligible added cost.
-
-config RTAI_KERN_BUSY_ALIGN_RET_DELAY
-	string "Delay to return to a switched in timed kernel task (ns)"
-	default 0
-	depends on RTAI_BUSY_TIME_ALIGN
-	help
-	The average time to return to the timed call function after switching 
-	back to a kernel space task switch. 
-	It is subtracted from the resume time of a timed task to avoid 
-	a delayed return when a busy wait to align to the resume time is 
-	requested.
-	To calibrate it enable RTAI_BUSY_TIME_ALIGN and set this and the 
-	following option to one, then run the calibration helper available 
-	in RTAI.
-	A zero value will skip the busy alignment, as if RTAI_BUSY_TIME_ALIGN
-	was not set. Useful to allow the alignment application just to kernel 
-	or user tasks. For example when a precise calibration for user space 
-	is used, a kernel task will anticipate its timed resumption; so setting
-	a positive value here and a zero for the corresponding option 
-	below will allow applying the busy wait just to kernel tasks.
-
-config RTAI_USER_BUSY_ALIGN_RET_DELAY
-	string "Delay to return to a switched in timed user task (ns)"
-	default 0
-	depends on RTAI_BUSY_TIME_ALIGN
-	help
-	The average time to return to the timed call function after switching 
-	back to a user space task switch. 
-	It is subtracted from the resume time of a timed task to avoid 
-	a delayed return when a busy wait to align to the resume time is
-	requested.
-	To calibrate it enable RTAI_BUSY_TIME_ALIGN and set this and the 
-	previous option to one, then run the calibration helper available 
-	in RTAI.
-	A zero value will skip the busy alignment, as if RTAI_BUSY_TIME_ALIGN
-	was not set. Useful to allow the alignment application just to kernel
-        or user tasks.
 endmenu
 
 menu "Supported services"
 
 source "base/arch/Kconfig.services"
 
-config RTAI_SHM
-	tristate "Shared memory"
-	default m
-	help
-	This RTAI specific module allows sharing memory inter-intra
-	real-time tasks and Linux processes. In fact it can be an
-	alternative to the SYSTEM V shared memory. It may also be
-	noticed that the services are symmetrical, i.e. the same calls
-	can be used both in real-time tasks (within the kernel) and
-	Linux processes.
-	The module will be called rtai_shm.o.
 endmenu
 
 menu "Other features"
 
 source "base/arch/Kconfig.other"
 
-config RTAI_MALLOC_HEAPSZ
-	string "Size of the global heap (Kbytes)"
-	depends on RTAI_MALLOC
-	default 2048
-	help
-	RTAI pre-allocates a global heap as part of its initialization
-	chores. This parameter allows to define its size (in
-	kilobytes).
-
-config RTAI_HARD_SOFT_TOGGLER
-	bool "Install Linux signal handler to toggle hard-soft modes"
-	default n
-	help
-	By setting this option RTAI will install a Linux signal (SIGUSR1) and 
-	handler, when any of the available task-thread init functions is called
-	to enable the usage of its own APIs. With it is possible to toggle the 
-	hard-soft mode of any task, asynchronously and outside of it, by using 
-	some form of KILL, i.e.: "kill -USR1 <pid>" from a shell, or 
-	"kill(pid, SIGUSR1)" from a C function. For the latter case the helper 
-	function "pid_t rt_get_linux_tid(RT_TASK *rt_task)" has been added to
-	help in quickly getting the pid of the RTAI task extension "rt_task" 
-	of a Linux task.
 endmenu
 
 endmenu
@@ -222,7 +110,7 @@ menu "Drivers"
 
 config RTAI_DRIVERS_SERIAL
 	bool "RTAI serial line driver"
-	default n
+	default y
 	help
 	The RTAI real-time serial driver.
 	The module will be called rtai_serial.o.
