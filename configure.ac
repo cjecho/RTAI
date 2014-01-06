@@ -35,15 +35,6 @@ if test x"$CROSS_COMPILE" = x ; then
 else
 	using_crosscompile=y
 fi
-case "$host" in
- m68knommu-*)
-	enable_shared=no
-	if test "$using_crosscompile" = y; then
-		LDFLAGS="-Wl,-elf2flt"
-		CROSSCOMPILE_TEST="tools/ucfront-gcc "$CROSS_COMPILE"gcc"
-	fi
-	;;
-esac
 AC_MSG_CHECKING([for CROSS_COMPILE])
 AC_MSG_RESULT([$CROSS_COMPILE])
 
@@ -60,6 +51,25 @@ AC_ARG_WITH(CXX,
 	CXX="$withval" ])
 AC_PROG_CXX
 CXXFLAGS=""
+
+dnl If we're using GCC, make sure that it is at least version 3.3.0.  Older
+dnl versions are explictly not supported.
+AC_MSG_CHECKING([whether gcc version is sufficient])
+major=0
+minor=0
+
+GCC_VERSION=`$CC -dumpversion`
+if test $? -eq 0; then
+	GCC_VERSION_MAJOR=`echo $GCC_VERSION | cut -d. -f1`
+	GCC_VERSION_MINOR=`echo $GCC_VERSION | cut -d. -f2`
+fi
+
+if test $GCC_VERSION_MAJOR -lt 3 -o $GCC_VERSION_MAJOR -eq 3 -a $GCC_VERSION_MINOR -lt 3 ; then
+	AC_MSG_RESULT([no])
+	AC_MSG_ERROR([If using GCC, version 3.3.0 or later is required.])
+else
+	AC_MSG_RESULT([yes])
+fi
 
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_BUILD_STRING,"$build",[Build system alias])
 RTAI_BUILD_STRING="$build"
@@ -85,6 +95,7 @@ case "$host" in
  i*86*-*)
 	RTAI_TARGET_ARCH=x86
 	RTAI_TARGET_SUBARCH=32
+	arch_has_mmu=y
 	arch_supports_lxrt=y
 	arch_supports_leds=y
 	arch_supports_sim=y
@@ -94,7 +105,10 @@ case "$host" in
  x86_64*-*)
         RTAI_TARGET_ARCH=x86
 	RTAI_TARGET_SUBARCH=64
+        arch_has_mmu=y
         arch_supports_lxrt=y
+        arch_supports_leds=n
+        arch_supports_sim=n
         arch_supports_rtailab=n
         wanted_kernel_arch=CONFIG_X86_64
         ;;
@@ -106,11 +120,6 @@ case "$host" in
 	RTAI_TARGET_ARCH=ppc
 	wanted_kernel_arch=CONFIG_PPC
         ;;
- m68knommu-*)
- 	RTAI_TARGET_ARCH=m68k
-	wanted_kernel_arch=CONFIG_M68K
-	arch_has_mmu=
-	;;
  m68k-*)
 	RTAI_TARGET_ARCH=m68k
 	wanted_kernel_arch=CONFIG_M68K
@@ -204,15 +213,12 @@ AC_ARG_WITH(linux-dir,
     [  --with-linux-dir=<linux-dir>      RTAI-enabled Linux kernel tree],
     [
 	case "$withval" in
-	"" )
+	"" | y | ye | yes | n | no)
 	    if test x${CONFIG_RTAI_LINUXDIR} = x; then
 		AC_MSG_ERROR([You must supply an argument to --with-linux-dir.])
 	    else
 		withval=${CONFIG_RTAI_LINUXDIR}
 	    fi
-	  ;;
-	y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-linux-dir.])
 	  ;;
 	esac
 	RTAI_LINUX_DIR="$withval"
@@ -277,11 +283,7 @@ ppc|powerpc)
 	RTAI_TARGET_ARCH_NAME=$ARCH_SUBDIR
 	;;
 m68k)
-	if test x$arch_has_mmu = x; then
-		RTAI_TARGET_ARCH_NAME=m68knommu
-	else
-		RTAI_TARGET_ARCH_NAME=$RTAI_TARGET_ARCH
-	fi
+	RTAI_TARGET_ARCH_NAME=$RTAI_TARGET_ARCH
 	;;
 *)
 	RTAI_TARGET_ARCH_NAME=$RTAI_TARGET_ARCH
@@ -312,22 +314,8 @@ else
     AC_MSG_ERROR([HAL patch not applied/enabled in $LINUX_KERNELSRC])
 fi
 
-case "$RTAI_LINUX_VERSION" in
-  2.4.*)
-	dnl by design, only RTAI Adeos-oldgen HAL is available with 2.4
-	unset CONFIG_KBUILD
-    ;;
-  2.6.*)
-	dnl by design, RTAI Adeos-oldgen HAL is supported up to 2.6.12 included,
-	dnl and RTAI Adeos-newgen HAL is supported since 2.6.13 included
-	CONFIG_KBUILD=y
-    ;;
-  3.*)
-	CONFIG_KBUILD=y
-    ;;
-  *) 
-    AC_MSG_ERROR([Unsupported kernel version $RTAI_LINUX_VERSION])
-esac
+dnl Only 3.x kernels are supported so default to newgen
+CONFIG_KBUILD=y
 
 dnl
 dnl Perform a few sanity checks.
@@ -874,19 +862,8 @@ if test x$CONFIG_RTAI_CAL_FREQS_FACT = x ; then
 fi
 AC_MSG_RESULT($CONFIG_RTAI_CAL_FREQS_FACT)
 
-AC_MSG_CHECKING([if gcc accepts -fno-use-cxa-atexit])
-save_CXXFLAGS="$CXXFLAGS"
+dnl -fno-use-cxa-atexit should be supported by all modern systems
 CXXFLAGS="-fno-use-cxa-atexit -Werror"
-AC_CACHE_VAL(ac_cv_accepts_cxa_atexit,
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-[AC_TRY_COMPILE([],
-[int i = 0; return i; ],
-[ac_cv_accepts_cxa_atexit=yes],
-[ac_cv_accepts_cxa_atexit=no])]
-AC_LANG_RESTORE)
-AC_MSG_RESULT($ac_cv_accepts_cxa_atexit)
-CXXFLAGS="$save_CXXFLAGS"
 
 AC_MSG_CHECKING(for comedi support over LXRT)
 AC_ARG_ENABLE(comedi-lxrt,
@@ -981,23 +958,6 @@ fi
 AC_MSG_RESULT(${CONFIG_RTAI_LAB:-no})
 
 if test x$CONFIG_RTAI_LAB = xy; then
-AC_MSG_CHECKING(for gcc version)
-AC_CACHE_VAL(ac_cv_mingcc,
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-[AC_TRY_COMPILE(
-[#if !( __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0))
-#error GCC too old
-#endif],
-[return 0;],
-[ac_cv_mingcc=yes],
-[ac_cv_mingcc=no])]
-AC_LANG_RESTORE)
-if [[ $ac_cv_mingcc = no ]]; then
-  AC_MSG_ERROR([Building RTAI-Lab requires GCC version >= 3.1])
-else
-  AC_MSG_RESULT([ok])
-fi
 MDL_HAVE_OPENGL
 SC_PATH_EFLTK($CONFIG_RTAI_EFLTK_DIR)
 fi
@@ -1642,7 +1602,6 @@ AM_CONDITIONAL(CONFIG_ARCH_AT91,[test "$CONFIG_ARCH_AT91" = y])
 AM_CONDITIONAL(CONFIG_ARCH_IMX,[test "$CONFIG_ARCH_IMX" = y])
 AM_CONDITIONAL(CONFIG_UCLINUX,[test "$CONFIG_UCLINUX" = y])
 AM_CONDITIONAL(CONFIG_SMP,[test "$CONFIG_SMP" = y])
-AM_CONDITIONAL(CONFIG_M68KNOMMU,[test "$CONFIG_M68K" = y -a "x$CONFIG_MMU" != xy])
 AM_CONDITIONAL(CONFIG_M68K,[test "$CONFIG_M68K" = y -a "$CONFIG_MMU" = y])
 AM_CONDITIONAL(CONFIG_M5407,[test "$CONFIG_M5407" = y])
 AM_CONDITIONAL(CONFIG_M5329,[test "$CONFIG_M5329" = y])
@@ -1745,7 +1704,7 @@ else
    RTAI_KBUILD_TOP="@if test \\! -r Module.symvers ; then \$(LN_S) -f \"\`cd \$(top_builddir) && pwd\`/Module.symvers\" . ; fi;"
    RTAI_KBUILD_BOTTOM=
    RTAI_KBUILD_CMD="for src in \$^; do if test \\! -r \`basename \$\$src\`; then \$(LN_S) \$\$src; fi; done; \
-		    rm -f $RTAI_LINUX_DIR/.tmp_versions/rtai_*.mod $RTAI_LINUX_DIR/.tmp_versions/*_rt.mod; \
+		    rm -rf $RTAI_LINUX_DIR/.tmp_versions/rtai_*.mod $RTAI_LINUX_DIR/.tmp_versions/*_rt.mod; \
                     \$(MAKE) -C $RTAI_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
 		    SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) modules \
 		    rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
@@ -1761,29 +1720,7 @@ fi
 AC_MSG_CHECKING([for kernel module extension])
 AC_MSG_RESULT([$RTAI_MODULE_EXT])
 
-dnl gcc 3.3 and above needs -D_FORTIFY_SOURCE=0 in math
-dnl (suggested by Paul <paul_c AT tuxcnc DOT org>);
-dnl not sure about the implications, in general I'd prefer
-dnl that code causing warnings gets fixed...
-RTAI_FP_CFLAGS=
-AC_MSG_CHECKING(for gcc version >= 3.3)
-AC_CACHE_VAL(ac_cv_gcc33,
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-[AC_TRY_COMPILE(
-[#if !( __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
-#error GCC does not need _FORTIFY_SOURCE
-#endif],
-[return 0;],
-[ac_cv_gcc33=yes],
-[ac_cv_gcc33=no])]
-AC_LANG_RESTORE)
-if [[ $ac_cv_gcc33 = no ]]; then
-  AC_MSG_RESULT([no])
-else
-  RTAI_FP_CFLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
-  AC_MSG_RESULT([ok])
-fi
+RTAI_FP_CFLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
 
 dnl FIXME: used in rtai-config.in but never defined
 RTAI_COMPAT_CPPFLAGS=
@@ -1814,11 +1751,8 @@ case $RTAI_TARGET_ARCH in
    64)
         RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
         RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
-        if test x$CONFIG_RTAI_FPU_SUPPORT = xy; then
-           RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float"
-        else
-           RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -msoft-float"
-        fi
+	dnl What kind of an x86_64 CPU doesn't have an FPU? Honestly.
+        RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float"
 	RTAI_TARGET_ARCH_OPTS="$RTAI_TARGET_ARCH_OPTS -msse -msse2"
         ;;
    esac
@@ -1874,7 +1808,6 @@ case $RTAI_TARGET_ARCH in
 		echo "************************************************"
 		exit 1
 	fi
-	#RTAI_KMOD_CFLAGS="$RTAI_KMOD_CFLAGS -I${RTAI_LINUX_DIR}/arch/m68k"
 	RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
 	RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe -DCONFIG_COLDFIRE"
 	RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -msoft-float"
@@ -1888,9 +1821,7 @@ if test x$CONFIG_RTAI_KMOD_DEBUG = xy; then
    RTAI_KMOD_CXXFLAGS="-g $RTAI_KMOD_CXXFLAGS"
 fi
 
-if [[ $ac_cv_accepts_cxa_atexit = yes ]]; then
-   RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CXXFLAGS -fno-use-cxa-atexit"
-fi
+RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CXXFLAGS -fno-use-cxa-atexit"
 
 dnl Ok, the following isn't pretty, but required to process the
 dnl various inlining modes correctly. This boils down to:

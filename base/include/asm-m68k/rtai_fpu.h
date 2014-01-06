@@ -47,8 +47,6 @@
 #ifdef CONFIG_RTAI_FPU_SUPPORT
 #ifdef CONFIG_MMU
 #error "Sorry, there is no FPU support in RTAI for M68K (you don't need it for soft-float or FPU-emulation)"
-#else
-#error "Sorry, there is no FPU support in RTAI for M68KNOMMU (you don't need it for soft-float or FPU-emulation)"
 #endif
 #endif
 
