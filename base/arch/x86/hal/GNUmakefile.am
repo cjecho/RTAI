@@ -6,9 +6,11 @@ CROSS_COMPILE = @CROSS_COMPILE@
 
 libhal_a_SOURCES = hal.c
 
-if CONFIG_I386
+if CONFIG_X86_32
 libhal_a_SOURCES += hal_32.c
-else
+endif
+
+if CONFIG_X86_64
 libhal_a_SOURCES += hal_64.c
 endif
 

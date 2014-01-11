@@ -1590,10 +1590,8 @@ dnl Whether Linux is using the Kbuild make system.
 AM_CONDITIONAL(CONFIG_KBUILD,[test "$CONFIG_KBUILD" = y])
 
 dnl CPU architecture
-dnl FIXME_X86
 AM_CONDITIONAL(CONFIG_X86_64,[test "$CONFIG_X86_64" = y])
-AM_CONDITIONAL(CONFIG_I386,[test "$CONFIG_X86_32" = y])
-AM_CONDITIONAL(CONFIG_X86,[test "$CONFIG_X86" = y])
+AM_CONDITIONAL(CONFIG_X86_32,[test "$CONFIG_X86_32" = y])
 AM_CONDITIONAL(CONFIG_PPC,[test "$CONFIG_PPC" = y])
 AM_CONDITIONAL(CONFIG_ARM,[test "$CONFIG_ARM" = y])
 AM_CONDITIONAL(CONFIG_ARCH_EP9301,[test "$CONFIG_ARCH_EP9301" = y])
@@ -1678,52 +1676,27 @@ dnl
 dnl Define arch-specific CFLAGS and links
 dnl
 
-if test x$CONFIG_KBUILD = x; then
-   dnl The following sets RTAI_KMOD_CFLAGS to the value used by the
-   dnl specified Linux tree for building kernel modules. This hack is
-   dnl not needed for 2.6 and above since out-of-tree builds of modules
-   dnl are fully controlled by the kbuild system, so that we don't even
-   dnl need to know of the compilation flags which will be used.
-   AC_MSG_CHECKING([for module compilation flags])
-   kmod_cflags=`cd $srcdir/base/config/modules && make -s RTAI_LINUX_DIR=$RTAI_LINUX_DIR ARCH=$RTAI_TARGET_ARCH_NAME CC=$CC | grep '^RTAI_KMOD_CFLAGS='`
-   eval $kmod_cflags
-   if test "$RTAI_KMOD_CFLAGS" = ""; then
-      AC_MSG_ERROR([Unable to retrieve compilation flags for kernel modules out of $RTAI_LINUX_DIR/Makefile])
-   fi
-   AC_MSG_RESULT([ok])
-   RTAI_MODULE_EXT=.o
-   RTAI_KBUILD_ENV=
-   RTAI_KBUILD_CMD=
-   RTAI_KBUILD_TOP=
-   RTAI_KBUILD_BOTTOM=
-   RTAI_KBUILD_CLEAN=
-   RTAI_KBUILD_DISTCLEAN=
-else
-   RTAI_MODULE_EXT=.ko
-   RTAI_KBUILD_ENV='src2obj = $(patsubst %.$(1),%.o,$(filter %.$(1),$(call notdir,$(2))))'
-   RTAI_KBUILD_TOP="@if test \\! -r Module.symvers ; then \$(LN_S) -f \"\`cd \$(top_builddir) && pwd\`/Module.symvers\" . ; fi;"
-   RTAI_KBUILD_BOTTOM=
-   RTAI_KBUILD_CMD="for src in \$^; do if test \\! -r \`basename \$\$src\`; then \$(LN_S) \$\$src; fi; done; \
-		    rm -rf $RTAI_LINUX_DIR/.tmp_versions/rtai_*.mod $RTAI_LINUX_DIR/.tmp_versions/*_rt.mod; \
-                    \$(MAKE) -C $RTAI_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
-		    SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) modules \
-		    rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
-   RTAI_KBUILD_CLEAN="\$(MAKE) -C $RTAI_LINUX_DIR CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
-                     SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) clean \
-                     rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
-   if test x$CONFIG_RTAI_QUIET = xquiet_ ; then
-      RTAI_KBUILD_CLEAN="@$RTAI_KBUILD_CLEAN"
-   fi
-   RTAI_KBUILD_DISTCLEAN=""
+RTAI_MODULE_EXT=.ko
+RTAI_KBUILD_ENV='src2obj = $(patsubst %.$(1),%.o,$(filter %.$(1),$(call notdir,$(2))))'
+RTAI_KBUILD_TOP="@if test \\! -r Module.symvers ; then \$(LN_S) -f \"\`cd \$(top_builddir) && pwd\`/Module.symvers\" . ; fi;"
+RTAI_KBUILD_BOTTOM=
+RTAI_KBUILD_CMD="for src in \$^; do if test \\! -r \`basename \$\$src\`; then \$(LN_S) \$\$src; fi; done; \
+	rm -rf $RTAI_LINUX_DIR/.tmp_versions/rtai_*.mod $RTAI_LINUX_DIR/.tmp_versions/*_rt.mod; \
+	\$(MAKE) -C $RTAI_LINUX_DIR CROSS_COMPILE=\$(CROSS_COMPILE) CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
+	SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) modules \
+	rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
+	RTAI_KBUILD_CLEAN="\$(MAKE) -C $RTAI_LINUX_DIR CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
+	SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) clean \
+	rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
+if test x$CONFIG_RTAI_QUIET = xquiet_ ; then
+	RTAI_KBUILD_CLEAN="@$RTAI_KBUILD_CLEAN"
 fi
+RTAI_KBUILD_DISTCLEAN=""
 
 AC_MSG_CHECKING([for kernel module extension])
 AC_MSG_RESULT([$RTAI_MODULE_EXT])
 
 RTAI_FP_CFLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
-
-dnl FIXME: used in rtai-config.in but never defined
-RTAI_COMPAT_CPPFLAGS=
 
 AC_MSG_CHECKING([for RTAI target architecture])
 
@@ -1743,16 +1716,16 @@ case $RTAI_TARGET_ARCH in
 	RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
 	RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
 	if test x$CONFIG_RTAI_FPU_SUPPORT = xy; then
-	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float"
+	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float -Wno-undef"
 	else
-	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -msoft-float"
+	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -msoft-float -Wno-undef"
 	fi
         ;;
    64)
         RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
         RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
 	dnl What kind of an x86_64 CPU doesn't have an FPU? Honestly.
-        RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float"
+        RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float -Wno-undef"
 	RTAI_TARGET_ARCH_OPTS="$RTAI_TARGET_ARCH_OPTS -msse -msse2"
         ;;
    esac
@@ -1924,7 +1897,6 @@ AC_SUBST(RTAI_TARGET_SUBARCH)
 AC_SUBST(RTAI_BUILTIN_MODLIST)
 AC_SUBST(RTAI_KMOD_CFLAGS)
 AC_SUBST(RTAI_KMOD_CXXFLAGS)
-AC_SUBST(RTAI_COMPAT_CPPFLAGS)
 AC_SUBST(RTAI_USER_CFLAGS)
 AC_SUBST(RTAI_REAL_USER_CFLAGS)
 AC_SUBST(RTAI_KMOD_APP_CFLAGS)
