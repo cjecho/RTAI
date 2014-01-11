@@ -2,7 +2,7 @@
 # Automatically generated make config: don't edit
 #
 CONFIG_MODULES=y
-CONFIG_RTAI_VERSION="4.0 (vulcano)"
+CONFIG_RTAI_VERSION="4.0.0 (unofficial)"
 
 #
 # General
@@ -46,7 +46,7 @@ CONFIG_RTAI_MONITOR_EXECTIME=y
 CONFIG_RTAI_ALLOW_RR=y
 # CONFIG_RTAI_FULL_PRINHER is not set
 # CONFIG_RTAI_ALIGN_LINUX_PRIORITY is not set
-# CONFIG_RTAI_ONE_SHOT is not set
+CONFIG_RTAI_ONE_SHOT=y
 CONFIG_RTAI_CAL_FREQS_FACT="0"
 
 #
@@ -92,7 +92,7 @@ CONFIG_RTAI_WD=y
 #
 # Drivers
 #
-CONFIG_RTAI_DRIVERS_SERIAL=y
+# CONFIG_RTAI_DRIVERS_SERIAL is not set
 
 #
 # RTAI Lab
