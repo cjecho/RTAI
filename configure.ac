@@ -85,10 +85,6 @@ dnl Find arch-specific requirements and supports. Features which
 dnl are not supported by all archs must be listed here, so that a
 dnl an Autoconf flag can later be defined/undefined in rtai_config.h.
 
-arch_supports_lxrt=
-arch_supports_leds=
-arch_supports_sim=
-arch_supports_rtailab=
 arch_has_mmu=y
 
 case "$host" in
@@ -97,9 +93,6 @@ case "$host" in
 	RTAI_TARGET_SUBARCH=32
 	arch_has_mmu=y
 	arch_supports_lxrt=y
-	arch_supports_leds=y
-	arch_supports_sim=y
-	arch_supports_rtailab=y
 	wanted_kernel_arch=CONFIG_X86_32
         ;;
  x86_64*-*)
@@ -107,9 +100,6 @@ case "$host" in
 	RTAI_TARGET_SUBARCH=64
         arch_has_mmu=y
         arch_supports_lxrt=y
-        arch_supports_leds=n
-        arch_supports_sim=n
-        arch_supports_rtailab=n
         wanted_kernel_arch=CONFIG_X86_64
         ;;
  arm-*)
@@ -852,77 +842,6 @@ AC_MSG_RESULT($CONFIG_RTAI_CAL_FREQS_FACT)
 dnl -fno-use-cxa-atexit should be supported by all modern systems
 CXXFLAGS="-fno-use-cxa-atexit -Werror"
 
-AC_MSG_CHECKING(for comedi support over LXRT)
-AC_ARG_ENABLE(comedi-lxrt,
-	[ --enable-comedi-lxrt	Enable comedi/LXRT support],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_COMEDI_LXRT=y ;;
-	*) unset CONFIG_RTAI_COMEDI_LXRT ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_COMEDI_LXRT:-no})
-
-CONFIG_RTAI_USE_LINUX_COMEDI=n
-if test x$CONFIG_RTAI_COMEDI_LXRT = xy; then
-	SC_PATH_COMEDI($CONFIG_RTAI_COMEDI_DIR)
-	if test "${RTAI_LINUX_DIR}" = "${CONFIG_RTAI_COMEDI_DIR:0:${#RTAI_LINUX_DIR}}" ; then
-		CONFIG_RTAI_USE_LINUX_COMEDI=y
-	fi
-fi
-
-AC_MSG_CHECKING(for comedi lock)
-AC_ARG_ENABLE(comedi-lock,
-	[ --enable-comedi-lock	Enable comedi lock ],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_USE_COMEDI_LOCK=y ;;
-	*) unset CONFIG_RTAI_USE_COMEDI_LOCK ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_USE_COMEDI_LOCK:-no})
-
-AC_MSG_CHECKING(for real-time serial driver)
-AC_ARG_ENABLE(serial,
-	[ --enable-serial	Build real-time serial driver],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_DRIVERS_SERIAL=y ;;
-	*) unset CONFIG_RTAI_DRIVERS_SERIAL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_DRIVERS_SERIAL:-no})
-
-AC_MSG_CHECKING(for real-time serial driver)
-AC_ARG_ENABLE(16550a,
-	[ --enable-16550a Build real-time serial driver],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_DRIVERS_16550A=y ;;
-	*) unset CONFIG_RTAI_DRIVERS_16550A;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_DRIVERS_16550A:-no})
-
-dnl Set default inline mode for LXRT as specified from
-dnl Kconfig. Defaults to conditional inlining.
-
-if test x$CONFIG_RTAI_16550A_PIO = xy; then
-   CONFIG_RTAI_16550A_HAM=1
-elif test x$CONFIG_RTAI_16550A_MMIO = xy; then
-   CONFIG_RTAI_16550A_HAM=2
-elif test x$CONFIG_RTAI_16550A_ANY = xy; then
-   CONFIG_RTAI_16550A_HAM=3
-fi
-
-AC_MSG_CHECKING(for real-time serial driver hardware access mode)
-AC_ARG_WITH(16550a-ham,
-	[ --with-16550a-ham	Set real-time serial driver hardware access mode (pio|mmio|any)],
-	[case "$withval" in
-	pio) CONFIG_RTAI_16550A_HAM=1 ;;
-	mmio) CONFIG_RTAI_16550A_HAM=2 ;;
-	any) CONFIG_RTAI_16550A_HAM=3 ;;
-	*) AC_MSG_ERROR([Bad argument to option: --with-16550a-ham=<pio|mmio|any>]) ;;
-	esac])
-case "$CONFIG_RTAI_" in
-  1) ham_type=pio ;;
-  2) ham_type=mmio ;;
-  3) ham_type=any ;;
-esac
-AC_MSG_RESULT([$ham_type])
-
 AC_MSG_CHECKING(for testsuite)
 AC_ARG_ENABLE(testsuite,
 	[ --enable-testsuite	Build RTAI testsuite],
@@ -1198,14 +1117,10 @@ AC_ARG_WITH(lxrt-inline,
 	[ --with-lxrt-inline	Set LXRT inlining mode (static|extern|none)],
 	[case "$withval" in
 	static) CONFIG_RTAI_LXRT_INLINE=1 ;;
-	extern) CONFIG_RTAI_LXRT_INLINE=2 ;;
-	none) CONFIG_RTAI_LXRT_INLINE=3 ;;
 	*) AC_MSG_ERROR([Bad argument to option: --with-lxrt-inline=<static|extern|none>]) ;;
 	esac])
 case "$CONFIG_RTAI_LXRT_INLINE" in
   1) inline_type=static ;;
-  2) inline_type=extern ;;
-  3) inline_type=none ;;
 esac
 AC_MSG_RESULT([$inline_type])
 
@@ -1359,16 +1274,6 @@ test \! x$CONFIG_RTAI_USE_TLSF = x && AC_DEFINE(CONFIG_RTAI_USE_TLSF,1,[Kconfig]
 test \! x$CONFIG_RTAI_MALLOC_VMALLOC = x && AC_DEFINE(CONFIG_RTAI_MALLOC_VMALLOC,1,[Kconfig])
 test \! x$CONFIG_RTAI_TASKLETS = x && AC_DEFINE(CONFIG_RTAI_TASKLETS,1,[Kconfig])
 test \! x$CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL = x && AC_DEFINE(CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL,1,[Kconfig])
-test \! x$CONFIG_RTAI_DRIVERS_SERIAL = x && AC_DEFINE(CONFIG_RTAI_DRIVERS_SERIAL,1,[Kconfig])
-test \! x$CONFIG_RTAI_DRIVERS_16550A = x && AC_DEFINE(CONFIG_RTAI_DRIVERS_16550A,1,[Kconfig])
-case $CONFIG_RTAI_16550A_HAM in
-	1) AC_DEFINE(CONFIG_RTAI_16550A_PIO,1,[Kconfig]) ;;
-	2) AC_DEFINE(CONFIG_RTAI_16550A_MMIO,1,[Kconfig]) ;;
-	3) AC_DEFINE(CONFIG_RTAI_16550A_ANY,1,[Kconfig]) ;;
-	*) if test \! x$CONFIG_RTAI_DRIVERS_16550A = x ; then
-		AC_MSG_ERROR([Missing 16550A hardware access mode])
-	fi ;;
-esac
 test \! x$CONFIG_RTAI_RTDM = x && AC_DEFINE(CONFIG_RTAI_RTDM,1,[Kconfig])
 test \! x$CONFIG_RTAI_ALIGN_LINUX_PRIORITY = x && AC_DEFINE(CONFIG_RTAI_ALIGN_LINUX_PRIORITY,1,[Kconfig])
 test \! x$CONFIG_RTAI_TASK_SWITCH_SIGNAL = x && AC_DEFINE(CONFIG_RTAI_TASK_SWITCH_SIGNAL,1,[Kconfig])
@@ -1460,30 +1365,17 @@ else
 fi
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_FIFOS_TEMPLATE,"$fifos_template",[Kconfig])
 
-test x$CONFIG_RTAI_MAINTAINER = xy && AC_DEFINE(CONFIG_RTAI_MAINTAINER,1,[Kconfig])
-test x$CONFIG_RTAI_MAINTAINER_PMA = xy && AC_DEFINE(CONFIG_RTAI_MAINTAINER_PMA,1,[Kconfig])
-test x$CONFIG_RTAI_MAINTAINER_PGM = xy && AC_DEFINE(CONFIG_RTAI_MAINTAINER_PGM,1,[Kconfig])
+AC_DEFINE(CONFIG_RTAI_INTERNAL_LXRT_SUPPORT,1,[Kconfig])
 
-if test x$arch_supports_lxrt = xy;  then
-    AC_DEFINE(CONFIG_RTAI_INTERNAL_LXRT_SUPPORT,1,[Kconfig])
-else
-    AC_DEFINE(CONFIG_RTAI_INTERNAL_LXRT_SUPPORT,0,[Kconfig])
-fi
-
-test x$arch_supports_leds = xy && AC_DEFINE(CONFIG_RTAI_INTERNAL_LEDS_SUPPORT,1,[Kconfig])
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_INTERNAL_LXRT_INLINE,1,[Kconfig])
 
 AH_VERBATIM(CONFIG_RTAI_LXRT_INLINE,[
 #ifndef CONFIG_RTAI_LXRT_INLINE
-#define CONFIG_RTAI_LXRT_INLINE CONFIG_RTAI_INTERNAL_LXRT_INLINE
+#define CONFIG_RTAI_LXRT_INLINE 1
 #endif /* !CONFIG_RTAI_LXRT_INLINE */
 #define __hidefun(name) name ## _hidden_inline
 #if CONFIG_RTAI_LXRT_INLINE == 1
 #define RTAI_PROTO(type,name,arglist) static inline type name arglist
-#elif CONFIG_RTAI_LXRT_INLINE == 2
-#define RTAI_PROTO(type,name,arglist) extern inline type name arglist
-#elif CONFIG_RTAI_LXRT_INLINE == 3
-#define RTAI_PROTO(type,name,arglist) type name arglist; static inline type __hidefun(name) arglist
 #else
 #define RTAI_PROTO(type,name,arglist) type name arglist
 #endif /* CONFIG_RTAI_LXRT_INLINE */
@@ -1573,13 +1465,8 @@ AM_CONDITIONAL(CONFIG_RTAI_TASKLETS_BUILTIN,[test x$CONFIG_RTAI_TASKLETS = xy])
 
 dnl Supported skins
 AM_CONDITIONAL(CONFIG_RTAI_RTDM,[test x$CONFIG_RTAI_RTDM = xy])
-dnl Supported drivers
-AM_CONDITIONAL(CONFIG_RTAI_DRIVERS_SERIAL,[test x$CONFIG_RTAI_DRIVERS_SERIAL = xy])
-AM_CONDITIONAL(CONFIG_RTAI_DRIVERS_16550A,[test x$CONFIG_RTAI_DRIVERS_16550A = xy])
 
-AM_CONDITIONAL(CONFIG_RTAI_LAB,[test x$CONFIG_RTAI_LAB = xy])
-AM_CONDITIONAL(CONFIG_RTAI_MVM,[test x$CONFIG_RTAI_MVM = xy])
-
+dnl Testsuite
 AM_CONDITIONAL(CONFIG_RTAI_TESTSUITE,[test x$CONFIG_RTAI_TESTSUITE = xy])
 
 dnl Misc compilation conditionals
@@ -1713,30 +1600,7 @@ if test x$CONFIG_RTAI_KMOD_DEBUG = xy; then
 fi
 
 RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CXXFLAGS -fno-use-cxa-atexit"
-
-dnl Ok, the following isn't pretty, but required to process the
-dnl various inlining modes correctly. This boils down to:
-dnl - if mode == "none", then we will always need -llxrt to be
-dnl   tackled on the library deps for user-space programs.
-dnl - if mode == "eager/static", then we will never need -llxrt
-dnl - if mode == "conditional/extern", then we will not need -llxrt
-dnl   unless the optimizer has been switched off, i.e. when the
-dnl   debugging mode has been switched on.
-
-if test $CONFIG_RTAI_LXRT_INLINE = 3; then
-   RTAI_LXRT_LDADD=-llxrt
-else
-   RTAI_LXRT_LDADD=
-   if test x$CONFIG_RTAI_USER_DEBUG = xy; then
-      RTAI_REAL_USER_CFLAGS="-g $RTAI_REAL_USER_CFLAGS"
-      if test $CONFIG_RTAI_LXRT_INLINE = 2; then
-         RTAI_LXRT_LDADD="-llxrt"
-      fi
-   else
-      RTAI_REAL_USER_CFLAGS="-O2 $RTAI_REAL_USER_CFLAGS"
-   fi
-fi
-
+RTAI_LXRT_LDADD=
 RTAI_KMOD_APP_CFLAGS=$RTAI_KMOD_CFLAGS
 RTAI_KMOD_APP_CXXFLAGS=$RTAI_KMOD_CXXFLAGS
 RTAI_USER_APP_CFLAGS=$RTAI_REAL_USER_CFLAGS
@@ -1798,8 +1662,6 @@ AC_SUBST(DOXYGEN_HAVE_DOT)
 AC_SUBST(DOXYGEN)
 AC_SUBST(LATEX_BATCHMODE)
 AC_SUBST(LATEX_MODE)
-AC_SUBST(EFLTK_DIR)
-AC_SUBST(COMEDI_DIR)
 
 AC_SUBST(RTAI_BUILD_STRING)
 AC_SUBST(RTAI_HOST_STRING)
@@ -1873,8 +1735,7 @@ AC_CONFIG_FILES([ \
 	base/posix/GNUmakefile \
 	])
 
-build_drivers=$CONFIG_RTAI_DRIVERS_SERIAL$CONFIG_RTAI_DRIVERS_16550A
-build_addons=$CONFIG_RTAI_COMEDI_LXRT$build_drivers$CONFIG_RTAI_RTDM
+build_addons=$CONFIG_RTAI_RTDM
 
 if test -d $srcdir/addons; then
   AC_CONFIG_FILES([ \

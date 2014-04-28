@@ -12,7 +12,3 @@ AM_CPPFLAGS = \
 	-fno-inline \
 	-I$(top_srcdir)/base/include \
 	-I../../include
-
-if CONFIG_RTAI_DRIVERS_SERIAL
-AM_CPPFLAGS += -I$(top_srcdir)/addons/drivers/serial
-endif

@@ -12,8 +12,3 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/base/include \
 	-I$(top_srcdir)/addons \
 	-I$(srcdir)/../..
-
-if CONFIG_RTAI_DRIVERS_16550A
-AM_CPPFLAGS += -I$(top_srcdir)/addons/drivers/16550A
-endif
-
