@@ -19,7 +19,9 @@ ifeq ($(MAKECMDGOALS),gbuild)
 -include .gtkinst
 endif
 
-include ../Makefile.include
+squote := '
+escsq   = $(subst $(squote),'\$(squote)',$1)
+cmd = @echo '  $(call escsq,$(quiet_cmd_$(1)))'; $(cmd_$(1))
 this_dir := base/config/kconfig
 
 CFLAGS := -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer

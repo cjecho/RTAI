@@ -4,10 +4,4 @@ if CONFIG_RTAI_RTDM
 OPTDIRS += rtdm
 endif
 
-if CONFIG_RTAI_COMEDI_LXRT
-OPTDIRS += comedi
-endif
-
-OPTDIRS += drivers
-
 SUBDIRS = $(OPTDIRS)

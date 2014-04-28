@@ -623,38 +623,6 @@ if test x$CONFIG_RTAI_TASKLETS = xy ; then
   RTAI_BUILTIN_MODLIST="$RTAI_BUILTIN_MODLIST tasklets"
 fi
 
-AC_MSG_CHECKING(for user-space interrupt support)
-AC_ARG_ENABLE(usi,
-	[ --enable-usi		Enable user-space interrupt support],
-	[case "$enableval" in
-	y | yes | b | builtin | built-in) CONFIG_RTAI_USI=y ;;
-	*) unset CONFIG_RTAI_USI ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_USI:-no})
-
-AC_MSG_CHECKING(for watchdog support)
-AC_ARG_ENABLE(watchdog,
-	[ --enable-watchdog	Enable watchdog support],
-	[case "$enableval" in
-	y | yes | m | mod | module) CONFIG_RTAI_WD=m ;;
-	*) unset CONFIG_RTAI_WD ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_WD:-no})
-
-AC_MSG_CHECKING(for leds-based debugging support)
-AC_ARG_ENABLE(leds,
-	[ --enable-leds		Enable leds-based debugging support],
-	[case "$enableval" in
-	y | yes | b | builtin | built-in) CONFIG_RTAI_LEDS=y ;;
-	m | mod | module) CONFIG_RTAI_LEDS=m ;;
-	*) unset CONFIG_RTAI_LEDS ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_RTAI_LEDS:-no})
-
-if test x$CONFIG_RTAI_LEDS = xy ; then
-  RTAI_BUILTIN_MODLIST="$RTAI_BUILTIN_MODLIST leds"
-fi
-
 AC_MSG_CHECKING(whether LXRT wraps service calls through Linux syscalls)
 AC_ARG_ENABLE(lxrt-use-linux-syscall,
 	[ --enable-lxrt-use-linux-syscall	Wrap LXRT service calls throug Linux syscall mechanism],
@@ -964,23 +932,6 @@ AC_ARG_ENABLE(testsuite,
 	esac])
 AC_MSG_RESULT(${CONFIG_RTAI_TESTSUITE:-no})
 
-AC_MSG_CHECKING(for RTAI-Lab)
-AC_ARG_ENABLE(rtailab,
-	[ --enable-rtailab	Build RTAI-Lab],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_LAB=y ;;
-	*) unset CONFIG_RTAI_LAB ;;
-	esac])
-if test x$arch_supports_rtailab = x; then
-  unset CONFIG_RTAI_LAB
-fi
-AC_MSG_RESULT(${CONFIG_RTAI_LAB:-no})
-
-if test x$CONFIG_RTAI_LAB = xy; then
-MDL_HAVE_OPENGL
-SC_PATH_EFLTK($CONFIG_RTAI_EFLTK_DIR)
-fi
-
 AC_MSG_CHECKING(for FPU support)
 AC_ARG_ENABLE(fpu,
 	[ --enable-fpu		Enable FPU support],
@@ -1047,7 +998,7 @@ if test x$CONFIG_RTAI_KSTACK_HEAPSZ = x ; then
 fi
 AC_MSG_RESULT($CONFIG_RTAI_KSTACK_HEAPSZ)
 
-AC_MSG_CHECKING(for number of CPUs (SMP-only))
+AC_MSG_CHECKING(for number of CPUs)
 AC_ARG_ENABLE(cpus,
 	[ --enable-cpus		Enable CPUs],
 	[case "$enableval" in
@@ -1238,15 +1189,9 @@ else
 fi
 
 dnl Set default inline mode for LXRT as specified from
-dnl Kconfig. Defaults to conditional inlining.
+dnl Kconfig. Defaults to strict / eager inlining.
 
-if test x$CONFIG_RTAI_LXRT_STATIC_INLINE = xy; then
-   CONFIG_RTAI_LXRT_INLINE=1
-elif test x$CONFIG_RTAI_LXRT_NO_INLINE = xy; then
-   CONFIG_RTAI_LXRT_INLINE=3
-else
-   CONFIG_RTAI_LXRT_INLINE=2
-fi
+CONFIG_RTAI_LXRT_INLINE=1
 
 AC_MSG_CHECKING(for LXRT inlining)
 AC_ARG_WITH(lxrt-inline,
@@ -1281,23 +1226,6 @@ AC_ARG_ENABLE(user-debug,
 	*) unset CONFIG_RTAI_USER_DEBUG ;;
 	esac])
 AC_MSG_RESULT(${CONFIG_RTAI_USER_DEBUG:-no})
-
-AC_ARG_ENABLE(quiet-build,
-        [ --enable-quiet-build   Less verbose build],
-        [case "$enableval" in
-        y | yes) CONFIG_RTAI_QUIET=quiet_ ;;
-        n | no) unset CONFIG_RTAI_QUIET ;;
-        esac])
-
-dnl Catch sub-package flags
-
-AC_MSG_CHECKING(for RTAI simulator)
-AC_ARG_ENABLE(sim,
-	[ --enable-sim		Build RTAI simulator (MVM) ],
-	[case "$enableval" in
-	y | yes) CONFIG_RTAI_MVM=y ;;
-	*) unset CONFIG_RTAI_MVM ;;
-	esac])
 
 dnl We need to know this before building the APIC support
 dnl into the SMP scheduler for the x86 platform. Autoconf imposes
@@ -1390,7 +1318,7 @@ dnl
 
 if test \! -r .rtai_config; then
    set | grep -e '^CONFIG_RTAI' -e '^CONFIG_MODULES' | \
-   sed -e 's,\(.*\)=\(.*\)$,\1=\2,' -e 's,quiet_,y,' > .rtai_config
+   sed -e 's,\(.*\)=\(.*\)$,\1=\2,' > .rtai_config
 fi
 
 dnl
@@ -1430,9 +1358,6 @@ test \! x$CONFIG_RTAI_MALLOC = x && AC_DEFINE(CONFIG_RTAI_MALLOC,1,[Kconfig])
 test \! x$CONFIG_RTAI_USE_TLSF = x && AC_DEFINE(CONFIG_RTAI_USE_TLSF,1,[Kconfig])
 test \! x$CONFIG_RTAI_MALLOC_VMALLOC = x && AC_DEFINE(CONFIG_RTAI_MALLOC_VMALLOC,1,[Kconfig])
 test \! x$CONFIG_RTAI_TASKLETS = x && AC_DEFINE(CONFIG_RTAI_TASKLETS,1,[Kconfig])
-test \! x$CONFIG_RTAI_USI = x && AC_DEFINE(CONFIG_RTAI_USI,1,[Kconfig])
-test \! x$CONFIG_RTAI_WD = x && AC_DEFINE(CONFIG_RTAI_WD,1,[Kconfig])
-test \! x$CONFIG_RTAI_LEDS = x && AC_DEFINE(CONFIG_RTAI_LEDS,1,[Kconfig])
 test \! x$CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL = x && AC_DEFINE(CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL,1,[Kconfig])
 test \! x$CONFIG_RTAI_DRIVERS_SERIAL = x && AC_DEFINE(CONFIG_RTAI_DRIVERS_SERIAL,1,[Kconfig])
 test \! x$CONFIG_RTAI_DRIVERS_16550A = x && AC_DEFINE(CONFIG_RTAI_DRIVERS_16550A,1,[Kconfig])
@@ -1461,8 +1386,6 @@ test x$CONFIG_RTAI_MQ = xy && AC_DEFINE(CONFIG_RTAI_MQ_BUILTIN,1,[Kconfig])
 test x$CONFIG_RTAI_SHM = xy && AC_DEFINE(CONFIG_RTAI_SHM_BUILTIN,1,[Kconfig])
 test x$CONFIG_RTAI_MALLOC = xy && AC_DEFINE(CONFIG_RTAI_MALLOC_BUILTIN,1,[Kconfig])
 test x$CONFIG_RTAI_TASKLETS = xy && AC_DEFINE(CONFIG_RTAI_TASKLETS_BUILTIN,1,[Kconfig])
-test x$CONFIG_RTAI_USI = xy && AC_DEFINE(CONFIG_RTAI_USI_BUILTIN,1,[Kconfig])
-test x$CONFIG_RTAI_LEDS = xy && AC_DEFINE(CONFIG_RTAI_LEDS_BUILTIN,1,[Kconfig])
 
 test x$CONFIG_RTAI_SCHED_ISR_LOCK = xy && AC_DEFINE(CONFIG_RTAI_SCHED_ISR_LOCK,1,[Kconfig])
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_RTC_FREQ,$CONFIG_RTAI_RTC_FREQ,[Kconfig])
@@ -1475,17 +1398,8 @@ test x$CONFIG_RTAI_RTDM_SHIRQ = xy && AC_DEFINE(CONFIG_RTAI_RTDM_SHIRQ,1,[Kconfi
 test x$CONFIG_RTAI_RTDM_SELECT = xy && AC_DEFINE(CONFIG_RTAI_RTDM_SELECT,1,[Kconfig])
 test x$CONFIG_RTAI_DEBUG_RTDM = xy && AC_DEFINE(CONFIG_RTAI_DEBUG_RTDM,1,[Kconfig])
 AC_DEFINE_UNQUOTED(CONFIG_RTAI_CAL_FREQS_FACT,$CONFIG_RTAI_CAL_FREQS_FACT,[Kconfig])
-test x$CONFIG_RTAI_USE_LINUX_COMEDI = xy && AC_DEFINE(CONFIG_RTAI_USE_LINUX_COMEDI,1,[Kconfig])
-test x$CONFIG_RTAI_USE_COMEDI_LOCK = xy && AC_DEFINE(CONFIG_RTAI_USE_COMEDI_LOCK,1,[Kconfig])
 
-case $CONFIG_RTAI_QUIET in
-	y|quiet_) CONFIG_RTAI_QUIET=quiet_ ;;
-	n|*) CONFIG_RTAI_QUIET= ;;
-esac
-
-if test x$CONFIG_RTAI_QUIET = xquiet_ ; then
-    AM_SILENT_RULES([yes])
-fi
+AM_SILENT_RULES([yes])
 
 case $CONFIG_RTAI_MONITOR_EXECTIME in
 	y) CONFIG_RTAI_MONITOR_EXECTIME=1 ;;
@@ -1557,7 +1471,7 @@ else
 fi
 
 test x$arch_supports_leds = xy && AC_DEFINE(CONFIG_RTAI_INTERNAL_LEDS_SUPPORT,1,[Kconfig])
-AC_DEFINE_UNQUOTED(CONFIG_RTAI_INTERNAL_LXRT_INLINE,$CONFIG_RTAI_LXRT_INLINE,[Kconfig])
+AC_DEFINE_UNQUOTED(CONFIG_RTAI_INTERNAL_LXRT_INLINE,1,[Kconfig])
 
 AH_VERBATIM(CONFIG_RTAI_LXRT_INLINE,[
 #ifndef CONFIG_RTAI_LXRT_INLINE
@@ -1642,9 +1556,6 @@ AM_CONDITIONAL(CONFIG_RTAI_MQ,[test -n "$CONFIG_RTAI_MQ"])
 AM_CONDITIONAL(CONFIG_RTAI_SHM,[test -n "$CONFIG_RTAI_SHM"])
 AM_CONDITIONAL(CONFIG_RTAI_MALLOC,[test -n "$CONFIG_RTAI_MALLOC"])
 AM_CONDITIONAL(CONFIG_RTAI_TASKLETS,[test -n "$CONFIG_RTAI_TASKLETS"])
-AM_CONDITIONAL(CONFIG_RTAI_USI,[test -n "$CONFIG_RTAI_USI"])
-AM_CONDITIONAL(CONFIG_RTAI_WD,[test -n "$CONFIG_RTAI_WD"])
-AM_CONDITIONAL(CONFIG_RTAI_LEDS,[test -n "$CONFIG_RTAI_LEDS"])
 AM_CONDITIONAL(CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL,[test -n "$CONFIG_RTAI_LXRT_USE_LINUX_SYSCALL"])
 
 AM_CONDITIONAL(CONFIG_RTAI_MATH_BUILTIN,[test x$CONFIG_RTAI_MATH = xy])
@@ -1659,13 +1570,7 @@ AM_CONDITIONAL(CONFIG_RTAI_MQ_BUILTIN,[test x$CONFIG_RTAI_MQ = xy])
 AM_CONDITIONAL(CONFIG_RTAI_SHM_BUILTIN,[test x$CONFIG_RTAI_SHM = xy])
 AM_CONDITIONAL(CONFIG_RTAI_MALLOC_BUILTIN,[test x$CONFIG_RTAI_MALLOC = xy])
 AM_CONDITIONAL(CONFIG_RTAI_TASKLETS_BUILTIN,[test x$CONFIG_RTAI_TASKLETS = xy])
-AM_CONDITIONAL(CONFIG_RTAI_USI_BUILTIN,[test x$CONFIG_RTAI_USI = xy])
-AM_CONDITIONAL(CONFIG_RTAI_LEDS_BUILTIN,[test x$CONFIG_RTAI_LEDS = xy])
 
-dnl Non-core packages.
-AM_CONDITIONAL(CONFIG_RTAI_COMEDI_LXRT,[test x$CONFIG_RTAI_COMEDI_LXRT = xy])
-AM_CONDITIONAL(CONFIG_RTAI_USE_LINUX_COMEDI,[test x$CONFIG_RTAI_USE_LINUX_COMEDI = xy])
-dnl AM_CONDITIONAL(CONFIG_RTAI_USE_COMEDI_LOCK,[test x$CONFIG_RTAI_USE_COMEDI_LOCK = xy])
 dnl Supported skins
 AM_CONDITIONAL(CONFIG_RTAI_RTDM,[test x$CONFIG_RTAI_RTDM = xy])
 dnl Supported drivers
@@ -1687,12 +1592,7 @@ AM_CONDITIONAL(CONFIG_RTAI_DOX_DOC,[test "$CONFIG_RTAI_DOX_DOC" = y])
 AM_CONDITIONAL(CONFIG_RTAI_GUIDE,[test "$CONFIG_RTAI_GUIDE" = y])
 
 dnl Maintenance symbols and profiles
-AM_CONDITIONAL(CONFIG_RTAI_MAINTAINER,[test "$CONFIG_RTAI_MAINTAINER" = y])
-AM_CONDITIONAL(CONFIG_RTAI_MAINTAINER_PMA,[test "$CONFIG_RTAI_MAINTAINER_PMA" = y])
-AM_CONDITIONAL(CONFIG_RTAI_MAINTAINER_PGM,[test "$CONFIG_RTAI_MAINTAINER_PGM" = y])
 AM_CONDITIONAL(CONFIG_RTAI_OLD_FASHIONED_BUILD,[test "$CONFIG_RTAI_OLD_FASHIONED_BUILD" = y])
-
-AM_CONDITIONAL(CONFIG_RTAI_QUIET,[test "$CONFIG_RTAI_QUIET" = quiet_])
 
 dnl
 dnl Define arch-specific CFLAGS and links
@@ -1710,9 +1610,7 @@ RTAI_KBUILD_CMD="for src in \$^; do if test \\! -r \`basename \$\$src\`; then \$
 	RTAI_KBUILD_CLEAN="\$(MAKE) -C $RTAI_LINUX_DIR CC=$CC ARCH=$RTAI_TARGET_ARCH_NAME \
 	SUBDIRS=\$\$PWD M=\$\$PWD rtai_srctree=\`cd \$(top_srcdir) && pwd\` rtai_srcdir=\`cd \$(srcdir) && pwd\` V=\$(V) clean \
 	rtai_objs='\$(call src2obj,c,\$^) \$(call src2obj,S,\$^) \$(call src2obj,cc,\$^) \$(call src2obj,cpp,\$^)' rtai_target=\$(basename \$@)"
-if test x$CONFIG_RTAI_QUIET = xquiet_ ; then
-	RTAI_KBUILD_CLEAN="@$RTAI_KBUILD_CLEAN"
-fi
+RTAI_KBUILD_CLEAN="@$RTAI_KBUILD_CLEAN"
 RTAI_KBUILD_DISTCLEAN=""
 
 AC_MSG_CHECKING([for kernel module extension])
@@ -1738,16 +1636,16 @@ case $RTAI_TARGET_ARCH in
 	RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
 	RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
 	if test x$CONFIG_RTAI_FPU_SUPPORT = xy; then
-	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float -Wno-undef"
+	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -fno-math-errno -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fcx-limited-range -mhard-float -Wno-undef"
 	else
-	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -msoft-float -Wno-undef"
+	   RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -fno-math-errno -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fcx-limited-range -msoft-float -Wno-undef"
 	fi
         ;;
    64)
         RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
         RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
 	dnl What kind of an x86_64 CPU doesn't have an FPU? Honestly.
-        RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -mhard-float -Wno-undef"
+        RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -fno-math-errno -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fcx-limited-range -mhard-float -Wno-undef"
 	RTAI_TARGET_ARCH_OPTS="$RTAI_TARGET_ARCH_OPTS -msse -msse2"
         ;;
    esac
@@ -1770,7 +1668,7 @@ case $RTAI_TARGET_ARCH in
 	fi
 	RTAI_KMOD_CXXFLAGS="$RTAI_KMOD_CFLAGS -fno-rtti -fno-exceptions -fno-strength-reduce -pipe"
 	RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe"
-	RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -ffast-math -msoft-float"
+	RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -fno-math-errno -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fcx-limited-range -msoft-float"
 	AC_CONFIG_LINKS(base/include/asm-arm/arch:$srcdir/base/include/asm-arm/arch-$RTAI_TARGET_SUBARCH)
         ;;
  ppc)
@@ -1807,8 +1705,6 @@ case $RTAI_TARGET_ARCH in
 	RTAI_REAL_USER_CFLAGS="$RTAI_REAL_USER_CFLAGS -Wall -Wstrict-prototypes -pipe -DCONFIG_COLDFIRE"
 	RTAI_FP_CFLAGS="$RTAI_FP_CFLAGS -msoft-float"
 	;;
-
-
 esac
 
 if test x$CONFIG_RTAI_KMOD_DEBUG = xy; then
@@ -1874,17 +1770,11 @@ if test x$CONFIG_KBUILD = xy; then
    AC_CONFIG_LINKS(base/ipc/tbx/Makefile:base/ipc/tbx/Makefile.kbuild)
    AC_CONFIG_LINKS(base/ipc/netrpc/Makefile:base/ipc/netrpc/Makefile.kbuild)
    AC_CONFIG_LINKS(base/ipc/shm/Makefile:base/ipc/shm/Makefile.kbuild)
-   AC_CONFIG_LINKS(base/leds/Makefile:base/leds/Makefile.kbuild)
    AC_CONFIG_LINKS(base/posix/Makefile:base/posix/Makefile.kbuild)
    AC_CONFIG_LINKS(base/malloc/Makefile:base/malloc/Makefile.kbuild)
    AC_CONFIG_LINKS(base/tasklets/Makefile:base/tasklets/Makefile.kbuild)
-   AC_CONFIG_LINKS(base/wd/Makefile:base/wd/Makefile.kbuild)
-   AC_CONFIG_LINKS(base/usi/Makefile:base/usi/Makefile.kbuild)
    AC_CONFIG_LINKS(base/math/Makefile:base/math/Makefile.kbuild)
    AC_CONFIG_LINKS(base/sched/Makefile:base/sched/Makefile.kbuild)
-   AC_CONFIG_LINKS(addons/drivers/serial/Makefile:addons/drivers/serial/Makefile.kbuild)
-   AC_CONFIG_LINKS(addons/comedi/Makefile:addons/comedi/Makefile.kbuild)
-   AC_CONFIG_LINKS(addons/drivers/16550A/Makefile:addons/drivers/16550A/Makefile.kbuild)
    AC_CONFIG_LINKS(addons/rtdm/Makefile:addons/rtdm/Makefile.kbuild)
    AC_CONFIG_LINKS(testsuite/kern/latency/Makefile:testsuite/kern/latency/Makefile.kbuild)
    AC_CONFIG_LINKS(testsuite/kern/preempt/Makefile:testsuite/kern/preempt/Makefile.kbuild)
@@ -1942,8 +1832,6 @@ AC_SUBST(RTAI_POSIX_WRAP)
 AC_SUBST(CONFIG_RTAI_LINUXDIR)
 AC_SUBST(CROSSCOMPILE_TEST)
 
-AC_SUBST(CONFIG_RTAI_QUIET)
-
 AC_CONFIG_FILES([ \
 	GNUmakefile \
 	base/GNUmakefile \
@@ -1982,9 +1870,6 @@ AC_CONFIG_FILES([ \
 	base/malloc/GNUmakefile \
 	base/tasklets/GNUmakefile \
 	base/trace/GNUmakefile \
-	base/wd/GNUmakefile \
-	base/usi/GNUmakefile \
-	base/leds/GNUmakefile \
 	base/posix/GNUmakefile \
 	])
 
@@ -1994,10 +1879,6 @@ build_addons=$CONFIG_RTAI_COMEDI_LXRT$build_drivers$CONFIG_RTAI_RTDM
 if test -d $srcdir/addons; then
   AC_CONFIG_FILES([ \
        addons/GNUmakefile \
-       addons/comedi/GNUmakefile \
-       addons/drivers/GNUmakefile \
-       addons/drivers/serial/GNUmakefile \
-       addons/drivers/16550A/GNUmakefile \
        addons/rtdm/GNUmakefile \
        addons/rtdm/lib/GNUmakefile \
        ])
@@ -2006,19 +1887,6 @@ elif test \! x$build_addons = x; then
 fi
 
 AM_CONDITIONAL(CONFIG_RTAI_ADDONS,[test \! x$build_addons = x])
-
-if test -d $srcdir/rtai-lab; then
-   AC_CONFIG_FILES([ \
-        rtai-lab/GNUmakefile \
-        rtai-lab/matlab/GNUmakefile \
-        rtai-lab/matrixx/GNUmakefile \
-        rtai-lab/scilab/GNUmakefile \
-        rtai-lab/scicoslab/GNUmakefile \
-        rtai-lab/scilab/utility/GNUmakefile \
-   ])
-elif test \! x$CONFIG_RTAI_LAB = x; then
-     AC_MSG_ERROR([rtai-lab package is missing])
-fi
 
 if test -d $srcdir/testsuite; then
    AC_CONFIG_FILES([ \
@@ -2034,16 +1902,6 @@ if test -d $srcdir/testsuite; then
         ])
 elif test \! x$CONFIG_RTAI_TESTSUITE = x; then
      AC_MSG_ERROR([testsuite package is missing])
-fi
-
-dnl FIXME: configurable?
-CONFIG_RTAI_PYTHON=y
-if test -d $srcdir/rtai-py; then
-   AC_CONFIG_FILES([ \
-        rtai-py/GNUmakefile \
-        ])
-elif test \! x$CONFIG_RTAI_PYTHON = x; then
-     AC_MSG_ERROR([python package is missing])
 fi
 
 if test \! x$RTAI_MAYBE_DOCDIR = x; then

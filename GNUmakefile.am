@@ -8,20 +8,12 @@ if CONFIG_RTAI_ADDONS
 OPTDIRS += addons
 endif
 
-if CONFIG_RTAI_LAB
-OPTDIRS += rtai-lab
-endif
-
-OPTDIRS += rtai-py
-
 SUBDIRS = base $(OPTDIRS)
 
 DIST_SUBDIRS = \
 	base \
 	testsuite \
-	addons \
-	rtai-lab \
-	rtai-py
+	addons
 
 EXTRA_DIST = \
 README.INSTALL \
@@ -34,9 +26,7 @@ DISTCLEANFILES = .rtai_config .rtai_config.old .cfok .cfchanged Module.symvers c
 
 moduledir = @RTAI_MODULE_DIR@
 
-if CONFIG_RTAI_QUIET
 MAKEFLAGS := $(MAKEFLAGS) --no-print-directory
-endif
 
 all-recursive install-recursive: base/GNUmakefile clean-if-reconfigured
 
@@ -64,7 +54,7 @@ CONFIG_METHODS := config nconfig menuconfig xconfig gconfig oldconfig silentoldc
 $(CONFIG_METHODS):
 	@$(MAKE) -C base/config/kconfig \
 	-f Makefile.kconfig $@ \
-	srctree=$(PWD) ARCH=`uname -m` CONFIG_RTAI_QUIET=$(CONFIG_RTAI_QUIET)
+	srctree=$(PWD) ARCH=`uname -m`
 	@$(MAKE) --no-print-directory config-status
 
 config-status: .rtai_config
@@ -86,7 +76,6 @@ config-status: .rtai_config
 	--with-kconfig-file=./$< \
 	--with-linux-dir=$(RTAI_LINUX_DIR) \
 	--prefix=$$CONFIG_RTAI_INSTALLDIR \
-	--enable-quiet-build=@CONFIG_RTAI_QUIET@ \
 	$$confopts ; \
 	if test $$? = 0; then \
 	   touch .cfok ; \
