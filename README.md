@@ -1,6 +1,6 @@
 RTAI
 ====
 
-RTAI branch for LinuxCNC
+A broken RTAI branch for LinuxCNC.
 
-Must not to be merged with `magma`
+Use `linuxcnc-old` instead for now.
